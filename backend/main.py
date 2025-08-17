@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routes.summarizer import summarizer_router
+from db import get_conn
 
 app = FastAPI(title="DocuScope AI")
 
@@ -16,6 +17,11 @@ app.add_middleware(
 # Register routes
 app.include_router(summarizer_router, prefix="/api/summarize")
 
-@app.get("/")
-def read_root():
-    return {"message": "DocuScope AI backend running"}
+@app.get("/db-test")
+def db_test():
+    conn = get_conn()
+    cur = conn.cursor()
+    cur.execute("SELECT 1;")
+    result = cur.fetchone()
+    conn.close()
+    return {"db_status": result}
