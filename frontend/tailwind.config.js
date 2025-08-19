@@ -2,10 +2,15 @@
 export default {
   content: [
     "./index.html",
-    "./src/**/*.{js,jsx,ts,tsx}",
+    "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        brand: "#2563eb", // customize with your brand color
+      },
+    },
   },
   plugins: [],
-}
+};
+// This is the Tailwind CSS configuration file for the frontend project.  
