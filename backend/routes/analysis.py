@@ -7,6 +7,10 @@ from utils.nlp import analyze_document
 from services.analysis import save_analysis, get_history
 from services.predict import classify_text  # reuses your Day 3 sklearn model
 
+from fastapi import UploadFile, File
+import docx2txt
+import fitz  # PyMuPDF for PDF reading
+
 router = APIRouter(tags=["analysis"])
 
 class AnalyzeIn(BaseModel):
@@ -19,16 +23,37 @@ class AnalyzeOut(BaseModel):
     sentiment: str | None
     key_phrases: str | None
 
-@router.post("/", response_model=AnalyzeOut)
-def analyze(payload: AnalyzeIn, db: Session = Depends(get_db)):
-    t = (payload.text or "").strip()
-    if not t:
-        raise HTTPException(status_code=400, detail="Text is required")
+@router.post("/upload", response_model=AnalyzeOut)
+async def analyze_file(file: UploadFile = File(...), db: Session = Depends(get_db)):
+    # 1️⃣ Read file contents
+    contents = await file.read()
+    text = ""
 
-    summary, categories, sentiment, key_phrases = analyze_document(t, classify_text)
+    # 2️⃣ Detect file type & extract text
+    if file.filename.endswith(".txt"):
+        text = contents.decode("utf-8", errors="ignore")
+    elif file.filename.endswith(".docx"):
+        with open("temp.docx", "wb") as f:
+            f.write(contents)
+        text = docx2txt.process("temp.docx")
+    elif file.filename.endswith(".pdf"):
+        with open("temp.pdf", "wb") as f:
+            f.write(contents)
+        doc = fitz.open("temp.pdf")
+        for page in doc:
+            text += page.get_text()
+        doc.close()
+    else:
+        raise HTTPException(status_code=400, detail="Unsupported file type")
+
+    text = text.strip()
+    if not text:
+        raise HTTPException(status_code=400, detail="No readable text in file")
+
+    summary, categories, sentiment, key_phrases = analyze_document(text, classify_text)
     rec = save_analysis(
         db,
-        document_text=t,
+        document_text=text,
         summary=summary,
         categories=categories,
         sentiment=sentiment,

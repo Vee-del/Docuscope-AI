@@ -3,19 +3,25 @@ import AnalyzePage from "./pages/AnalyzePage";
 
 export default function App() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white flex flex-col items-center p-8">
-      <header className="mb-8 text-center">
-        <h1 className="text-4xl font-extrabold text-cyan-400 drop-shadow-lg">
-          Docuscope AI
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-black text-slate-100 flex flex-col">
+      <header className="px-6 py-6 text-center sticky top-0 bg-black/30 backdrop-blur border-b border-white/10">
+        <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">
+          <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-sky-400 to-indigo-400">
+            DocuScope AI
+          </span>
         </h1>
-        <p className="text-gray-300 mt-2">AI-powered document analysis</p>
+        <p className="text-slate-300 mt-1">AI-powered document analysis</p>
       </header>
 
-      <main className="w-full max-w-3xl bg-gray-800/60 rounded-2xl shadow-lg p-6 backdrop-blur-lg border border-gray-700">
+      <main className="flex-1 w-full max-w-6xl mx-auto p-6 md:p-10">
         <Routes>
           <Route path="/" element={<AnalyzePage />} />
         </Routes>
       </main>
+
+      <footer className="text-center text-xs text-slate-400 py-6">
+        © {new Date().getFullYear()} DocuScope AI
+      </footer>
     </div>
   );
 }
