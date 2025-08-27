@@ -13,6 +13,11 @@ from routes.analysis import router as analysis_router
 from db_orm import Base, engine
 from models.prediction import Prediction          # existing
 from models.analysis import DocumentAnalysis      # NEW
+from routes import upload_analysis
+from fastapi.responses import JSONResponse
+from starlette.middleware.base import BaseHTTPMiddleware
+
+
 
 
 # --- App Init ---
@@ -21,16 +26,27 @@ app = FastAPI(
     description="AI-powered document intelligence API",
     version="0.5.0"
 )
+app.include_router(upload_analysis.router, prefix="/api")
 
 # Allow frontend (adjust origins if needed)
 app.add_middleware(
-    CORSMiddleware,
+    CORSMiddleware, 
     allow_origins=["*"],  # tighten this later for production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+class JSONErrorMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        try:
+            return await call_next(request)
+        except Exception as e:
+            return JSONResponse(
+                status_code=500,
+                content={"error": str(e)}
+            )
 
+app.add_middleware(JSONErrorMiddleware)
 # --- DB Init (auto-create tables if not exist) ---
 Base.metadata.create_all(bind=engine)
 

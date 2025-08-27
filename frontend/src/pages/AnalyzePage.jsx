@@ -42,25 +42,31 @@ export default function AnalyzePage() {
   setAnalyzing(true);
   setAnalyzed(false);
 
-  try {
-    const formData = new FormData();
-    formData.append("file", file);
+  let formData = new FormData();
+  formData.append("file", file);
 
-    const response = await fetch("http://127.0.0.1:8000/analysis/upload", {
+
+  try {
+    const response = await fetch("/api/analyze-doc/", {
       method: "POST",
       body: formData,
     });
 
-    if (!response.ok) {
-      throw new Error("Failed to analyze document");
+    let result;
+    try {
+      result = await response.json();
+    } catch {
+      throw new Error("Server did not return JSON. Check backend logs.");
     }
 
-    const result = await response.json();
-    setAnalysisResult(result); // ✅ save backend response
-    setAnalyzed(true);
-  } catch (error) {
-    console.error("Analysis error:", error);
-    setAnalysisResult({ error: "Could not analyze document" });
+    if (response.ok) {
+      setAnalyzed(true);
+      setAnalysisResult(result); // store backend result
+    } else {
+      alert(result.error || result.detail || "Analysis failed");
+    }
+  } catch (err) {
+    alert("Server error: " + err.message);
   } finally {
     setAnalyzing(false);
   }
@@ -76,7 +82,7 @@ export default function AnalyzePage() {
         animate={{ opacity: 1 }}
         style={{
           background:
-            "radial-gradient(ellipse at 60% 40%, #38bdf8 0%, #818cf8 40%, #f472b6 100%)",
+            "radial-gradient(ellipse at 70% 30%, #38bdf8 0%, #818cf8 40%, #f472b6 100%)",
           filter: "blur(90px)",
         }}
       />
@@ -88,20 +94,20 @@ export default function AnalyzePage() {
         transition={{ duration: 0.7 }}
         className="relative z-10 text-6xl md:text-7xl font-extrabold text-center 
                    bg-gradient-to-r from-blue-400 via-fuchsia-400 to-pink-400 
-                   bg-clip-text text-transparent drop-shadow-xl"
+                   bg-clip-text drop-shadow-xl"
       >
         DOCUSCOPE AI
       </motion.h1>
 
       {/* Subtitle */}
       <motion.h2
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, delay: 0.2 }}
-        className="relative z-10 text-2xl md:text-3xl font-bold text-cyan-300 drop-shadow mt-2"
-      >
-        AI-powered Document Analysis
-      </motion.h2>
+  className="relative z-10 text-2xl md:text-3xl font-bold 
+             bg-gradient-to-r from-cyan-300 via-blue-300 to-pink-400 
+             bg-clip-text text-black drop-shadow mt-1"
+>
+  AI-powered Document Analysis
+</motion.h2>
+
 
       {/* Description */}
       <motion.p
@@ -205,27 +211,20 @@ export default function AnalyzePage() {
 
           {/* Analysis Result (demo) */}
           <AnimatePresence>
-  {analyzed && analysisResult && (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 20 }}
-      className="w-full bg-gradient-to-r from-blue-400/30 to-pink-400/30 
-                 rounded-xl p-4 mt-3 text-white/90 text-left shadow space-y-2"
-    >
-      <h3 className="text-lg font-bold mb-2">📊 Analysis Result</h3>
-      {analysisResult.error ? (
-        <p className="text-red-300">{analysisResult.error}</p>
-      ) : (
-        <>
-          <p><span className="font-semibold">Summary:</span> {analysisResult.summary}</p>
-          <p><span className="font-semibold">Categories:</span> {analysisResult.categories}</p>
-          <p><span className="font-semibold">Sentiment:</span> {analysisResult.sentiment}</p>
-          <p><span className="font-semibold">Key Phrases:</span> {analysisResult.key_phrases}</p>
-        </>
-      )}
-    </motion.div>
-  )}
+  {analysisResult && (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    className="w-full bg-white/20 backdrop-blur rounded-xl p-4 mt-4 text-white shadow"
+  >
+    <h3 className="font-bold text-lg mb-2">Analysis Result</h3>
+    <p><span className="font-semibold">Summary:</span> {analysisResult.summary}</p>
+    <p><span className="font-semibold">Categories:</span> {analysisResult.categories}</p>
+    <p><span className="font-semibold">Sentiment:</span> {analysisResult.sentiment}</p>
+    <p><span className="font-semibold">Key Phrases:</span> {analysisResult.key_phrases}</p>
+  </motion.div>
+)}
+
 </AnimatePresence>
 
         </div>

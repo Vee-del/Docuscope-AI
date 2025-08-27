@@ -10,7 +10,7 @@ export default function App() {
             DocuScope AI
           </span>
         </h1>
-        <p className="text-slate-300 mt-1">AI-powered document analysis</p>
+        <p className="text-slate-300 mt-1">An AI-powered document analysis tool that parses your documents and provides insights.</p>
       </header>
 
       <main className="flex-1 w-full max-w-6xl mx-auto p-6 md:p-10">
@@ -19,7 +19,7 @@ export default function App() {
         </Routes>
       </main>
 
-      <footer className="text-center text-xs text-slate-400 py-6">
+      <footer className="text-center text-xs text-slate-400 py-10">
         © {new Date().getFullYear()} DocuScope AI
       </footer>
     </div>
