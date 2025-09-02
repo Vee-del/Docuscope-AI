@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { useRef, useState } from "react";
 import { AnimatePresence } from "framer-motion";
-import { Upload, BarChart2, CheckCircle2 } from "lucide-react";
+import { Upload, FileText, BarChart2, CheckCircle2, AlertCircle } from "lucide-react";
 
 export default function AnalyzePage() {
   const [file, setFile] = useState(null);
@@ -17,6 +17,7 @@ export default function AnalyzePage() {
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
     setAnalyzed(false);
+    setError(null);
   };
 
   const handleDrag = (e) => {
@@ -33,17 +34,21 @@ export default function AnalyzePage() {
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       setFile(e.dataTransfer.files[0]);
       setAnalyzed(false);
+      setError(null);
     }
   };
 
   const handleAnalyze = async () => {
-    if (!file) return;
+    if (!file) {
+      setError("Please select a file first.");
+      return;
+    }
 
     setAnalyzing(true);
     setAnalyzed(false);
     setError(null);
 
-    let formData = new FormData();
+    const formData = new FormData();
     formData.append("file", file);
 
     try {
@@ -52,32 +57,20 @@ export default function AnalyzePage() {
         body: formData,
       });
 
-      let result;
-      try {
-        result = await response.json();
-      } catch {
-        throw new Error("Server did not return JSON. Check backend logs.");
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Server error: ${errorText}`);
       }
 
-      if (response.ok) {
-        setAnalyzed(true);
-        setAnalysisResult(result); // store backend result
-        setError(null);
-      } else {
-        alert(result.error || result.detail || "Analysis failed");
-      }
-      
+      const data = await response.json();
+      setAnalysisResult(data);
+      setAnalyzed(true);
     } catch (err) {
-    setError("Server error: " + err.message);
-  } finally {
-    setAnalyzing(false);
-  }
-};
-{error && (
-  <div className="w-full bg-red-500 text-white p-3 rounded-xl mt-4">
-    {error}
-  </div>
-)}
+      setError(err.message);
+    } finally {
+      setAnalyzing(false);
+    }
+  };
 
   return (
     <div className="relative min-h-screen flex flex-col items-center justify-center px-6 overflow-hidden">
@@ -87,8 +80,7 @@ export default function AnalyzePage() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         style={{
-          background:
-            "linear-gradient(135deg, #0f172a 0%, #1e3a8a 40%, #7e22ce 100%)",
+          background: "linear-gradient(135deg, #0f172a 0%, #1e3a8a 40%, #7e22ce 100%)",
         }}
       />
 
@@ -120,8 +112,10 @@ export default function AnalyzePage() {
         transition={{ duration: 0.9, delay: 0.3 }}
         className="relative z-10 mt-3 max-w-2xl text-center text-base md:text-lg text-white/80"
       >
-        A tool that lets you upload or drag your document to instantly receive
-        summaries, sentiment insights, entity extraction, and more — powered by AI.
+        Upload or drag your document to receive{" "}
+        <span className="text-cyan-300">summaries</span>,{" "}
+        <span className="text-fuchsia-300">sentiment insights</span>,{" "}
+        <span className="text-blue-300">key phrases</span>, and more — powered by AI.
       </motion.p>
 
       {/* Upload & Analyze Card */}
@@ -131,14 +125,14 @@ export default function AnalyzePage() {
         transition={{ duration: 0.6, delay: 0.4 }}
         className="relative z-10 w-full max-w-xl mt-6"
       >
-        <div className="bg-white/10 backdrop-blur-2xl border border-white/20 
+        <div className="bg-white/10 backdrop-blur-xl border border-white/20 
                         rounded-3xl shadow-2xl p-6 flex flex-col items-center space-y-6">
           {/* Drag & Drop Upload */}
           <form
             className={`w-full flex flex-col items-center space-y-3 border-2 ${
               dragActive
                 ? "border-fuchsia-400 bg-fuchsia-400/10"
-                : "border-dashed border-blue-400"
+                : "border-dashed border-blue-400/50"
             } rounded-2xl p-5 transition-all duration-200`}
             onDragEnter={handleDrag}
             onDragOver={handleDrag}
@@ -175,79 +169,84 @@ export default function AnalyzePage() {
 
           {/* Analyze Button */}
           <motion.button
-  whileHover={{
-    scale: 1.07,
-    boxShadow: "0px 0px 20px rgba(129,140,248,0.6)",
-  }}
-  whileTap={{ scale: 0.97 }}
-  disabled={!file || analyzing}
-  onClick={handleAnalyze}
-  className={`w-full flex items-center justify-center gap-2 
-              bg-gradient-to-r from-cyan-500 via-blue-500 to-fuchsia-500 
-              hover:from-cyan-600 hover:to-pink-600 
-              rounded-2xl py-3 text-lg font-bold shadow-lg 
-              transition-all duration-200 ${
-                !file || analyzing
-                  ? "opacity-60 cursor-not-allowed"
-                  : "cursor-pointer"
-              }`}
->
-  {analyzing ? (
-    <motion.span
-      className="animate-spin"
-      initial={{ rotate: 0 }}
-      animate={{ rotate: 360 }}
-      transition={{ repeat: Infinity, duration: 1 }}
-    >
-      <BarChart2 className="w-5 h-5" />
-    </motion.span>
-  ) : analyzed ? (
-    <CheckCircle2 className="w-5 h-5 text-green-400" />
-  ) : (
-    <BarChart2 className="w-5 h-5" />
-  )}
-  {analyzing
-    ? "Analyzing..."
-    : analyzed
-    ? "Analysis Complete!"
-    : "Analyze Document"}
-</motion.button>
+            whileHover={{
+              scale: 1.07,
+              boxShadow: "0px 0px 20px rgba(129,140,248,0.6)",
+            }}
+            whileTap={{ scale: 0.97 }}
+            disabled={!file || analyzing}
+            onClick={handleAnalyze}
+            className={`w-full flex items-center justify-center gap-2 
+                        bg-gradient-to-r from-cyan-500 via-blue-500 to-fuchsia-500 
+                        hover:from-cyan-600 hover:to-pink-600 
+                        rounded-2xl py-3 text-lg font-bold shadow-lg 
+                        transition-all duration-200 ${
+                          !file || analyzing
+                            ? "opacity-60 cursor-not-allowed"
+                            : "cursor-pointer"
+                        }`}
+          >
+            {analyzing ? (
+              <motion.span
+                className="animate-spin"
+                initial={{ rotate: 0 }}
+                animate={{ rotate: 360 }}
+                transition={{ repeat: Infinity, duration: 1 }}
+              >
+                <BarChart2 className="w-5 h-5" />
+              </motion.span>
+            ) : analyzed ? (
+              <CheckCircle2 className="w-5 h-5 text-green-400" />
+            ) : (
+              <BarChart2 className="w-5 h-5" />
+            )}
+            {analyzing
+              ? "Analyzing..."
+              : analyzed
+              ? "Analysis Complete!"
+              : "Analyze Document"}
+          </motion.button>
 
-{/* Error message */}
-{error && (
-  <div className="w-full bg-red-500 text-white p-3 rounded-xl mt-4">
-    {error}
-  </div>
-)}
+          {/* Error message */}
+          {error && (
+            <div className="w-full flex items-center gap-2 bg-red-500/20 text-red-300 border border-red-400/50 p-3 rounded-xl mt-4">
+              <AlertCircle className="w-5 h-5" />
+              {error}
+            </div>
+          )}
 
-{/* Analysis Result */}
-<AnimatePresence>
-  {analysisResult && (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="w-full bg-white/20 backdrop-blur rounded-xl p-4 mt-4 text-white shadow"
-    >
-      <h3 className="font-bold text-lg mb-2">Analysis Result</h3>
-      <p>
-        <span className="font-semibold">Summary:</span>{" "}
-        {analysisResult.summary}
-      </p>
-      <p>
-        <span className="font-semibold">Categories:</span>{" "}
-        {analysisResult.categories?.join(", ")}
-      </p>
-      <p>
-        <span className="font-semibold">Sentiment:</span>{" "}
-        {analysisResult.sentiment}
-      </p>
-      <p>
-        <span className="font-semibold">Key Phrases:</span>{" "}
-        {analysisResult.key_phrases?.join(", ")}
-      </p>
-    </motion.div>
-  )}
-</AnimatePresence>
+          {/* Analysis Result */}
+          <AnimatePresence>
+            {analysisResult && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="w-full bg-slate-900/70 backdrop-blur border border-white/10 rounded-xl p-5 mt-4 text-white shadow-lg"
+              >
+                <h3 className="font-bold text-lg mb-3 flex items-center gap-2 text-violet-300">
+                  <FileText className="w-5 h-5" /> Analysis Result
+                </h3>
+                <div className="space-y-2 text-sm">
+                  <p>
+                    <span className="font-semibold text-cyan-300">Summary:</span>{" "}
+                    {analysisResult.summary || "N/A"}
+                  </p>
+                  <p>
+                    <span className="font-semibold text-cyan-300">Categories:</span>{" "}
+                    {Array.isArray(analysisResult.categories)
+                      ? analysisResult.categories.join(", ")
+                      : analysisResult.categories || "N/A"}
+                  </p>
+                  <p>
+                    <span className="font-semibold text-cyan-300">Key Phrases:</span>{" "}
+                    {Array.isArray(analysisResult.key_phrases)
+                      ? analysisResult.key_phrases.join(", ")
+                      : analysisResult.key_phrases || "N/A"}
+                  </p>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </motion.div>
     </div>
