@@ -175,75 +175,79 @@ export default function AnalyzePage() {
 
           {/* Analyze Button */}
           <motion.button
-            whileHover={{
-              scale: 1.07,
-              boxShadow: "0px 0px 20px rgba(129,140,248,0.6)",
-            }}
-            whileTap={{ scale: 0.97 }}
-            disabled={!file || analyzing}
-            onClick={handleAnalyze}
-            className={`w-full flex items-center justify-center gap-2 
-                        bg-gradient-to-r from-cyan-500 via-blue-500 to-fuchsia-500 
-                        hover:from-cyan-600 hover:to-pink-600 
-                        rounded-2xl py-3 text-lg font-bold shadow-lg 
-                        transition-all duration-200 ${
-                          !file || analyzing
-                            ? "opacity-60 cursor-not-allowed"
-                            : "cursor-pointer"
-                        }`}
-                        
-          >
-            {analyzing ? (
-              <motion.span
-                className="animate-spin"
-                initial={{ rotate: 0 }}
-                animate={{ rotate: 360 }}
-                transition={{ repeat: Infinity, duration: 1 }}
-              >
-                <BarChart2 className="w-5 h-5" />
-              </motion.span>
-            ) : analyzed ? (
-              <CheckCircle2 className="w-5 h-5 text-green-400" />
-            ) : (
-              <BarChart2 className="w-5 h-5" />
-            )}
-            {analyzing
-              ? "Analyzing..."
-              : analyzed
-              ? "Analysis Complete!"
-              : "Analyze Document"}
-          </motion.button>
+  whileHover={{
+    scale: 1.07,
+    boxShadow: "0px 0px 20px rgba(129,140,248,0.6)",
+  }}
+  whileTap={{ scale: 0.97 }}
+  disabled={!file || analyzing}
+  onClick={handleAnalyze}
+  className={`w-full flex items-center justify-center gap-2 
+              bg-gradient-to-r from-cyan-500 via-blue-500 to-fuchsia-500 
+              hover:from-cyan-600 hover:to-pink-600 
+              rounded-2xl py-3 text-lg font-bold shadow-lg 
+              transition-all duration-200 ${
+                !file || analyzing
+                  ? "opacity-60 cursor-not-allowed"
+                  : "cursor-pointer"
+              }`}
+>
+  {analyzing ? (
+    <motion.span
+      className="animate-spin"
+      initial={{ rotate: 0 }}
+      animate={{ rotate: 360 }}
+      transition={{ repeat: Infinity, duration: 1 }}
+    >
+      <BarChart2 className="w-5 h-5" />
+    </motion.span>
+  ) : analyzed ? (
+    <CheckCircle2 className="w-5 h-5 text-green-400" />
+  ) : (
+    <BarChart2 className="w-5 h-5" />
+  )}
+  {analyzing
+    ? "Analyzing..."
+    : analyzed
+    ? "Analysis Complete!"
+    : "Analyze Document"}
+</motion.button>
 
+{/* Error message */}
+{error && (
+  <div className="w-full bg-red-500 text-white p-3 rounded-xl mt-4">
+    {error}
+  </div>
+)}
 
-          {/* Analysis Result */}
-          <AnimatePresence>
-            {analysisResult && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="w-full bg-white/20 backdrop-blur rounded-xl p-4 mt-4 text-white shadow"
-              >
-                <h3 className="font-bold text-lg mb-2">Analysis Result</h3>
-                <p>
-                  <span className="font-semibold">Summary:</span>{" "}
-                  {analysisResult.summary}
-                </p>
-                <p>
-                  <span className="font-semibold">Categories:</span>{" "}
-                  {analysisResult.categories}
-                </p>
-                <p>
-                  <span className="font-semibold">Sentiment:</span>{" "}
-                  {analysisResult.sentiment}
-                </p>
-                <p>
-                  <span className="font-semibold">Key Phrases:</span>{" "}
-                  {analysisResult.key_phrases}
-                </p>
-              </motion.div>
-              
-            )}
-          </AnimatePresence>
+{/* Analysis Result */}
+<AnimatePresence>
+  {analysisResult && (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="w-full bg-white/20 backdrop-blur rounded-xl p-4 mt-4 text-white shadow"
+    >
+      <h3 className="font-bold text-lg mb-2">Analysis Result</h3>
+      <p>
+        <span className="font-semibold">Summary:</span>{" "}
+        {analysisResult.summary}
+      </p>
+      <p>
+        <span className="font-semibold">Categories:</span>{" "}
+        {analysisResult.categories?.join(", ")}
+      </p>
+      <p>
+        <span className="font-semibold">Sentiment:</span>{" "}
+        {analysisResult.sentiment}
+      </p>
+      <p>
+        <span className="font-semibold">Key Phrases:</span>{" "}
+        {analysisResult.key_phrases?.join(", ")}
+      </p>
+    </motion.div>
+  )}
+</AnimatePresence>
         </div>
       </motion.div>
     </div>

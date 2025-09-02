@@ -8,6 +8,7 @@ from routes.history import history_router  # optional, can remove later
 
 # NEW:
 from routes.analysis import router as analysis_router
+from routes import analysis
 
 # Ensure models are imported so Alembic sees them
 from db_orm import Base, engine
@@ -26,6 +27,7 @@ app = FastAPI(
     description="AI-powered document intelligence API",
     version="0.5.0"
 )
+app.include_router(analysis.router)
 app.include_router(upload_analysis.router, prefix="/api")
 
 # Allow frontend (adjust origins if needed)
