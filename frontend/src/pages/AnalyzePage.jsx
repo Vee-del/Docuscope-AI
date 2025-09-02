@@ -1,5 +1,5 @@
 // src/pages/AnalyzePage.jsx
-// eslint-disable-next-line no-unused-vars
+/* eslint-disable-next-line no-unused-vars*/
 import { motion } from "framer-motion";
 import { useRef, useState } from "react";
 import { AnimatePresence } from "framer-motion";
@@ -10,9 +10,9 @@ export default function AnalyzePage() {
   const [dragActive, setDragActive] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [analyzed, setAnalyzed] = useState(false);
-  const inputRef = useRef();
   const [analysisResult, setAnalysisResult] = useState(null);
-
+  const [error, setError] = useState(null);
+  const inputRef = useRef();
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
@@ -37,53 +37,58 @@ export default function AnalyzePage() {
   };
 
   const handleAnalyze = async () => {
-  if (!file) return;
+    if (!file) return;
 
-  setAnalyzing(true);
-  setAnalyzed(false);
+    setAnalyzing(true);
+    setAnalyzed(false);
+    setError(null);
 
-  let formData = new FormData();
-  formData.append("file", file);
+    let formData = new FormData();
+    formData.append("file", file);
 
-
-  try {
-    const response = await fetch("/api/analyze-doc/", {
-      method: "POST",
-      body: formData,
-    });
-
-    let result;
     try {
-      result = await response.json();
-    } catch {
-      throw new Error("Server did not return JSON. Check backend logs.");
-    }
+      const response = await fetch("http://127.0.0.1:8000/analyze-doc/", {
+        method: "POST",
+        body: formData,
+      });
 
-    if (response.ok) {
-      setAnalyzed(true);
-      setAnalysisResult(result); // store backend result
-    } else {
-      alert(result.error || result.detail || "Analysis failed");
-    }
-  } catch (err) {
-    alert("Server error: " + err.message);
+      let result;
+      try {
+        result = await response.json();
+      } catch {
+        throw new Error("Server did not return JSON. Check backend logs.");
+      }
+
+      if (response.ok) {
+        setAnalyzed(true);
+        setAnalysisResult(result); // store backend result
+        setError(null);
+      } else {
+        alert(result.error || result.detail || "Analysis failed");
+      }
+      
+    } catch (err) {
+    setError("Server error: " + err.message);
   } finally {
     setAnalyzing(false);
   }
 };
-
+{error && (
+  <div className="w-full bg-red-500 text-white p-3 rounded-xl mt-4">
+    {error}
+  </div>
+)}
 
   return (
     <div className="relative min-h-screen flex flex-col items-center justify-center px-6 overflow-hidden">
-      {/* Animated blurred background */}
+      {/* Gradient Background */}
       <motion.div
         className="absolute inset-0 z-0"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         style={{
           background:
-            "radial-gradient(ellipse at 70% 30%, #38bdf8 0%, #818cf8 40%, #f472b6 100%)",
-          filter: "blur(90px)",
+            "linear-gradient(135deg, #0f172a 0%, #1e3a8a 40%, #7e22ce 100%)",
         }}
       />
 
@@ -101,13 +106,12 @@ export default function AnalyzePage() {
 
       {/* Subtitle */}
       <motion.h2
-  className="relative z-10 text-2xl md:text-3xl font-bold 
-             bg-gradient-to-r from-cyan-300 via-blue-300 to-pink-400 
-             bg-clip-text text-black drop-shadow mt-1"
->
-  AI-powered Document Analysis
-</motion.h2>
-
+        className="relative z-10 text-2xl md:text-3xl font-bold 
+                   bg-gradient-to-r from-cyan-300 via-blue-300 to-pink-400 
+                   bg-clip-text text-black drop-shadow mt-1"
+      >
+        AI-powered Document Analysis
+      </motion.h2>
 
       {/* Description */}
       <motion.p
@@ -116,11 +120,11 @@ export default function AnalyzePage() {
         transition={{ duration: 0.9, delay: 0.3 }}
         className="relative z-10 mt-3 max-w-2xl text-center text-base md:text-lg text-white/80"
       >
-        Upload or drag your document to instantly receive summaries, sentiment
-        insights, entity extraction, and more — powered by AI.
+        A tool that lets you upload or drag your document to instantly receive
+        summaries, sentiment insights, entity extraction, and more — powered by AI.
       </motion.p>
 
-      {/* Card */}
+      {/* Upload & Analyze Card */}
       <motion.div
         initial={{ scale: 0.92, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
@@ -187,6 +191,7 @@ export default function AnalyzePage() {
                             ? "opacity-60 cursor-not-allowed"
                             : "cursor-pointer"
                         }`}
+                        
           >
             {analyzing ? (
               <motion.span
@@ -209,24 +214,36 @@ export default function AnalyzePage() {
               : "Analyze Document"}
           </motion.button>
 
-          {/* Analysis Result (demo) */}
+
+          {/* Analysis Result */}
           <AnimatePresence>
-  {analysisResult && (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    className="w-full bg-white/20 backdrop-blur rounded-xl p-4 mt-4 text-white shadow"
-  >
-    <h3 className="font-bold text-lg mb-2">Analysis Result</h3>
-    <p><span className="font-semibold">Summary:</span> {analysisResult.summary}</p>
-    <p><span className="font-semibold">Categories:</span> {analysisResult.categories}</p>
-    <p><span className="font-semibold">Sentiment:</span> {analysisResult.sentiment}</p>
-    <p><span className="font-semibold">Key Phrases:</span> {analysisResult.key_phrases}</p>
-  </motion.div>
-)}
-
-</AnimatePresence>
-
+            {analysisResult && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="w-full bg-white/20 backdrop-blur rounded-xl p-4 mt-4 text-white shadow"
+              >
+                <h3 className="font-bold text-lg mb-2">Analysis Result</h3>
+                <p>
+                  <span className="font-semibold">Summary:</span>{" "}
+                  {analysisResult.summary}
+                </p>
+                <p>
+                  <span className="font-semibold">Categories:</span>{" "}
+                  {analysisResult.categories}
+                </p>
+                <p>
+                  <span className="font-semibold">Sentiment:</span>{" "}
+                  {analysisResult.sentiment}
+                </p>
+                <p>
+                  <span className="font-semibold">Key Phrases:</span>{" "}
+                  {analysisResult.key_phrases}
+                </p>
+              </motion.div>
+              
+            )}
+          </AnimatePresence>
         </div>
       </motion.div>
     </div>
