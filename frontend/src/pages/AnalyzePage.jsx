@@ -52,7 +52,7 @@ export default function AnalyzePage() {
     formData.append("file", file);
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/analyze-doc/", {
+      const response = await fetch("http://127.0.0.1:8000/analyze/", {
         method: "POST",
         body: formData,
       });
@@ -76,7 +76,7 @@ export default function AnalyzePage() {
     <div className="relative min-h-screen flex flex-col items-center justify-center px-6 overflow-hidden">
       {/* Gradient Background */}
       <motion.div
-        className="absolute inset-0 z-0"
+        className="absolute inset-0 -z-10"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         style={{
